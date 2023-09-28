@@ -1,0 +1,8 @@
+kind: Secret
+apiVersion: v1
+metadata:
+  name: superuser-pg
+data:
+  password: (cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1 | base64)
+  username: postgres
+type: kubernetes.io/basic-auth

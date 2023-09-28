@@ -1,0 +1,42 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: k8s-pg 
+spec:
+  instances: 3
+  primaryUpdateStrategy: unsupervised
+  postgresql:
+    parameters:
+      shared_buffers: 256MB
+      pg_stat_statements.max: '10000'
+      pg_stat_statements.track: all
+      auto_explain.log_min_duration: '10s'
+  storage:
+    storageClass: local-path
+    size: 5Gi
+  bootstrap:
+    initdb: 
+      database: k8s
+      owner: k8s
+      secret:
+        name: k8s-pg-user
+  superuserSecret:
+    name: superuser-pg
+  backup:
+    barmanObjectStore:
+      destinationPath: s3://postgres/
+      endpointURL: http://minio.minio.svc.cluster.local:9000
+      s3Credentials:
+        accessKeyId:
+          name: backup-creds
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: backup-creds
+          key: ACCESS_SECRET_KEY
+      wal:
+        compression: gzip
+      data:
+        compression: gzip
+        immediateCheckpoint: false
+        jobs: 1
+    retentionPolicy: "7d"
